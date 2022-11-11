@@ -10,7 +10,7 @@ pragma solidity ^0.8.16;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 // Declaracion del Smart Contract - Auction
-contract Concialite is Ownable {
+contract Testament is Ownable {
 
     mapping (bytes32 => mapping(address => uint256)) public assetsPercents;
     bool isDonor;
