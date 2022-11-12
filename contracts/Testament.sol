@@ -57,29 +57,30 @@ contract Testament is Ownable, Pausable {
         uint256 oldPercent
     );
 
-    function getAssetPercent(string calldata assetId, address heir) public view returns (uint256) {
-        return assetsPercents[secureHash(assetId)][heir];
+    function getAssetPercent(string calldata _assetId, address _heir) public view returns (uint256) {
+        return assetsPercents[secureHash(_assetId)][_heir];
     }
 
-    function registerAsset(string calldata assetId, address heir, uint256 percent) public onlyOwner whenNotPaused {
+    function registerAsset(string calldata _assetId, address _heir, uint256 _percent) public onlyOwner whenNotPaused {
         require(!isExecuted);
-        requireValidString(assetId, 'Invalid asset id');
+        require(_heir != owner(), 'Owner of the testament cannot be a heir');
+        requireValidString(_assetId, 'Invalid asset id');
 
-        bytes32 secureAssetId = secureHash(assetId);
+        bytes32 secureAssetId = secureHash(_assetId);
 
-        uint256 oldPercent = assetsPercents[secureAssetId][heir];
+        uint256 oldPercent = assetsPercents[secureAssetId][_heir];
 
-        require(oldPercent != percent, 'Percent already set for the heir asset');
+        require(oldPercent != _percent, 'Percent already set for the heir asset');
 
-        assetsPercents[secureAssetId][heir] = percent;
+        assetsPercents[secureAssetId][_heir] = _percent;
 
-        emit UpdatedAsset(assetId, heir, percent, oldPercent);
+        emit UpdatedAsset(_assetId, _heir, _percent, oldPercent);
     }
 
     function setIsDonor(bool _isDonor) public onlyOwner whenNotPaused {
         checkIsNotDeath();
         checkIsNotExecuted();
-        require(isDonor != _isDonor, 'Donor value is already set');
+        require(_isDonor != isDonor, 'Donor value is already set');
 
         isDonor = _isDonor;
 
@@ -102,7 +103,8 @@ contract Testament is Ownable, Pausable {
     function setNotary(address _notary) public onlyOwner whenNotPaused {
         checkIsNotDeath();
         checkIsNotExecuted();
-        require(notary != _notary, 'Notary already stored, try a different notary address');
+        require(_notary != owner(), 'Owner of the testament cannot be the notary');
+        require(_notary != notary, 'Notary already stored, try a different notary address');
 
         address oldNotary = notary;
 
@@ -135,16 +137,18 @@ contract Testament is Ownable, Pausable {
         emit Deceased(deathCertificateId);
     }
 
+    // PRIVATE FUNCTIONS
+
     function requireValidString(string memory str, string memory errorMessage) private pure {
         require(bytes(str).length > 0, errorMessage);
     }
 
-    function hash(string memory _text) private pure returns (bytes32) {
-        return keccak256(abi.encodePacked(_text));
+    function hash(string memory text) private pure returns (bytes32) {
+        return keccak256(abi.encodePacked(text));
     }
 
-    function secureHash(string memory _text) private pure returns (bytes32) {
-        return keccak256(abi.encodePacked(keccak256(abi.encodePacked(_text))));
+    function secureHash(string memory text) private pure returns (bytes32) {
+        return keccak256(abi.encodePacked(keccak256(abi.encodePacked(text))));
     }
 
     function checkIsNotDeath() private view {
