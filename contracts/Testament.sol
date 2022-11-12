@@ -3,17 +3,26 @@
 
 pragma solidity ^0.8.16;
 
-// Informacion del Smart Contract
-// Nombre: Testament
-// Logica: Implementa subasta de productos entre varios participantes
+// Smart Contract Information
+// Name: Testament
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-// Declaracion del Smart Contract - Auction
+// Smart Contract - Testament
 contract Testament is Ownable {
 
+    // Relation of assets with wallets
     mapping(bytes32 => mapping(address => uint256)) public assetsPercents;
+    // true if user will donate its organs
     bool isDonor;
+    // Url of the video to be seen by the heirs
+    string videoUrl;
+    string deathCertificateUrl;
+    address notary;
+
+    function getAssetPercent(string memory assetId, address person) public view returns (uint256) {
+        return assetsPercents[hash(assetId)][person];
+    }
 
     function registerAsset(string memory assetId, address person, uint256 percent) public onlyOwner {
         assetsPercents[hash(assetId)][person] = percent;
@@ -23,13 +32,23 @@ contract Testament is Ownable {
         return keccak256(abi.encodePacked(_text));
     }
 
-    function registerIsDonor(bool _isDonor) public onlyOwner {
+    function setIsDonor(bool _isDonor) public onlyOwner {
         isDonor = _isDonor;
     }
 
-    // ----------- Constructor -----------
-    // Uso: Inicializa el Smart Contract - Auction con: description, precio y tiempo
-    constructor() {
+    function setVideoUrl(string _videoUrl) public onlyOwner {
+        videoUrl = _videoUrl;
     }
 
+    function setNotary(address _notary) public onlyOwner {
+        notary = _notary;
+    }
+
+    function setDeathCertificate(string _deathCertificateUrl) public onlyOwner {
+        require(msg.sender == notary);
+        deathCertificateUrl = _deathCertificateUrl;
+    }
+
+    constructor() {
+    }
 }
