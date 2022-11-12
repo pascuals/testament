@@ -70,20 +70,20 @@ contract Testament is Ownable {
     function setDeathCertificate(string memory _deathCertificateId) public onlyOwner {
         require(msg.sender == notary);
         checkIsNotExecuted();
-        requireValidString(_deathCertificateUrl);
+        requireValidString(_deathCertificateId);
 
         deathCertificateId = _deathCertificateId;
     }
 
-    function checkIsNotDeath() private pure  {
-        require(bytes(deathCertificateUrl).length == 0);
+    function checkIsNotDeath() private view  {
+        require(bytes(deathCertificateId).length == 0);
     }
 
-    function checkIsDeath() private pure {
-        requireValidString(deathCertificateUrl);
+    function checkIsDeath() private view {
+        requireValidString(deathCertificateId);
     }
 
-    function checkIsNotExecuted() private pure {
+    function checkIsNotExecuted() private view {
         require(!isExecuted);
     }
 
