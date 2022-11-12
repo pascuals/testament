@@ -14,14 +14,18 @@ contract Testament is Ownable {
     // Relation of assets with wallets
     mapping(bytes32 => mapping(address => uint256)) public assetsPercents;
     // true if user will donate its organs
-    bool isDonor;
+    bool public isDonor;
     // Url of the video to be seen by the heirs
-    string videoUrl;
-    string videoPassword;
-    string deathCertificateUrl;
-    address notary;
+    string public videoUrl;
+    string public videoPassword;
 
-    bool isExecuted;
+
+    string public deathCertificateId;
+
+    // Notary can update a death certificate and execute the testament
+    address public notary;
+
+    bool public isExecuted;
 
     function getAssetPercent(string memory assetId, address person) public view returns (uint256) {
         return assetsPercents[hash(assetId)][person];
@@ -29,7 +33,7 @@ contract Testament is Ownable {
 
     function registerAsset(string memory assetId, address person, uint256 percent) public onlyOwner {
         require(!isExecuted);
-        require(assetId != '' && bytes(assetId).length > 0);
+        requireValidString(assetId);
         assetsPercents[hash(assetId)][person] = percent;
     }
 
@@ -43,7 +47,7 @@ contract Testament is Ownable {
         isDonor = _isDonor;
     }
 
-    function setVideoUrl(string _videoUrl, string _videoPassword) public onlyOwner {
+    function setVideoUrl(string memory _videoUrl, string memory _videoPassword) public onlyOwner {
         checkIsNotDeath();
         checkIsNotExecuted();
         videoUrl = _videoUrl;
@@ -63,28 +67,28 @@ contract Testament is Ownable {
         isExecuted = true;
     }
 
-    function setDeathCertificate(string _deathCertificateUrl) public onlyOwner {
+    function setDeathCertificate(string memory _deathCertificateId) public onlyOwner {
         require(msg.sender == notary);
         checkIsNotExecuted();
         requireValidString(_deathCertificateUrl);
 
-        deathCertificateUrl = _deathCertificateUrl;
+        deathCertificateId = _deathCertificateId;
     }
 
-    function checkIsNotDeath() public {
-        require(deathCertificateUrl == '');
+    function checkIsNotDeath() private pure  {
+        require(bytes(deathCertificateUrl).length == 0);
     }
 
-    function checkIsDeath() public {
-        require(deathCertificateUrl != '');
+    function checkIsDeath() private pure {
+        requireValidString(deathCertificateUrl);
     }
 
-    function checkIsNotExecuted() public {
+    function checkIsNotExecuted() private pure {
         require(!isExecuted);
     }
 
-    function requireValidString(string str) private {
-        require(str != '' && bytes(str).length > 0);
+    function requireValidString(string memory str) private pure {
+        require(bytes(str).length > 0);
     }
 
     constructor() {
