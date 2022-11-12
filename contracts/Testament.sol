@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 // Declaracion del Smart Contract - Auction
 contract Testament is Ownable {
 
-    mapping (bytes32 => mapping(address => uint256)) public assetsPercents;
+    mapping(bytes32 => mapping(address => uint256)) public assetsPercents;
     bool isDonor;
 
     function registerAsset(string memory assetId, address person, uint256 percent) public onlyOwner {
@@ -31,5 +31,5 @@ contract Testament is Ownable {
     // Uso: Inicializa el Smart Contract - Auction con: description, precio y tiempo
     constructor() {
     }
-    
+
 }

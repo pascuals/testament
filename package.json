@@ -1,0 +1,9 @@
+{
+  "name": "api",
+  "version": "0.0.0",
+  "private": true,
+  "devDependencies": {
+    "solidity-coverage": "^0.8.2",
+    "@openzeppelin/truffle-upgrades": "^1.17.0"
+  }
+}

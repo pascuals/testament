@@ -1,2 +1,4 @@
 testament.iml
-.idea
+.idea/
+
+node_modules/
