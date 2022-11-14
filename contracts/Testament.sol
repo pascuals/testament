@@ -7,19 +7,22 @@ pragma solidity ^0.8.17;
 // Name: Testament
 
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/security/Pausable.sol";
 
 // Smart Contract - Testament
-contract Testament is Ownable {
+contract Testament is Ownable, Pausable {
 
     // Relation of assets with wallets
     mapping(bytes32 => mapping(address => uint256)) public assetsPercents;
+
     // true if user will donate its organs
     bool public isDonor;
+
     // Url of the video to be seen by the heirs
     string public videoUrl;
     string public videoPassword;
 
-
+    // Death certificate id
     string public deathCertificateId;
 
     // Notary can update a death certificate and execute the testament
@@ -27,70 +30,136 @@ contract Testament is Ownable {
 
     bool public isExecuted;
 
-    function getAssetPercent(string memory assetId, address person) public view returns (uint256) {
-        return assetsPercents[hash(assetId)][person];
+    event Executed();
+
+    event Deceased(
+        string deathCertificateId
+    );
+
+    event UpdatedVideo(
+        string videoUrl,
+        string oldVideoUrl
+    );
+
+    event UpdatedNotary(
+        address notaryAddress,
+        address oldNotaryAddress
+    );
+
+    event UpdatedIsDonor(
+        bool isDonor
+    );
+
+    event UpdatedAsset(
+        string assetId,
+        address heir,
+        uint256 newPercent,
+        uint256 oldPercent
+    );
+
+    function getAssetPercent(string calldata _assetId, address _heir) public view returns (uint256) {
+        return assetsPercents[secureHash(_assetId)][_heir];
     }
 
-    function registerAsset(string memory assetId, address person, uint256 percent) public onlyOwner {
+    function registerAsset(string calldata _assetId, address _heir, uint256 _percent) public onlyOwner whenNotPaused {
         require(!isExecuted);
-        requireValidString(assetId);
-        assetsPercents[hash(assetId)][person] = percent;
+        require(_heir != owner(), 'Owner of the testament cannot be a heir');
+        requireValidString(_assetId, 'Invalid asset id');
+
+        bytes32 secureAssetId = secureHash(_assetId);
+
+        uint256 oldPercent = assetsPercents[secureAssetId][_heir];
+
+        require(oldPercent != _percent, 'Percent already set for the heir asset');
+
+        assetsPercents[secureAssetId][_heir] = _percent;
+
+        emit UpdatedAsset(_assetId, _heir, _percent, oldPercent);
     }
 
-    function hash(string memory _text) private pure returns (bytes32) {
-        return keccak256(abi.encodePacked(_text));
-    }
-
-    function setIsDonor(bool _isDonor) public onlyOwner {
+    function setIsDonor(bool _isDonor) public onlyOwner whenNotPaused {
         checkIsNotDeath();
         checkIsNotExecuted();
+        require(_isDonor != isDonor, 'Donor value is already set');
+
         isDonor = _isDonor;
+
+        emit UpdatedIsDonor(isDonor);
     }
 
-    function setVideoUrl(string memory _videoUrl, string memory _videoPassword) public onlyOwner {
+    function setVideoUrl(string calldata _videoUrl, string calldata _videoPassword) public onlyOwner whenNotPaused {
         checkIsNotDeath();
         checkIsNotExecuted();
+        require(hash(videoUrl) != hash(_videoUrl) && hash(videoPassword) != hash(_videoPassword), 'Url already stored, try a different video url');
+
+        string memory oldVideoUrl = videoUrl;
+
         videoUrl = _videoUrl;
         videoPassword = _videoPassword;
+
+        emit UpdatedVideo(videoUrl, oldVideoUrl);
     }
 
-    function setNotary(address _notary) public onlyOwner {
+    function setNotary(address _notary) public onlyOwner whenNotPaused {
         checkIsNotDeath();
         checkIsNotExecuted();
+        require(_notary != owner(), 'Owner of the testament cannot be the notary');
+        require(_notary != notary, 'Notary already stored, try a different notary address');
+
+        address oldNotary = notary;
+
         notary = _notary;
+
+        emit UpdatedNotary(notary, oldNotary);
     }
 
-    function executeTestament() public {
-        require(msg.sender == notary);
-        checkIsDeath();
+    function executeTestament() public whenNotPaused {
+        require(msg.sender == notary, 'Not enough permissions to execute the testament');
+        checkIsDeath('Death certificate required');
         checkIsNotExecuted();
+
         isExecuted = true;
+
+        emit Executed();
     }
 
-    function setDeathCertificate(string memory _deathCertificateId) public onlyOwner {
-        require(msg.sender == notary);
+    function setDeathCertificate(string calldata _deathCertificateId) public whenNotPaused {
+        require(msg.sender == notary, 'Not enough permissions to add a death certificate');
         checkIsNotExecuted();
-        requireValidString(_deathCertificateUrl);
+        checkIsDeath('Owner is already death');
+        requireValidString(_deathCertificateId, 'Invalid death certificate');
 
         deathCertificateId = _deathCertificateId;
+
+        // Owner deceased
+        renounceOwnership();
+
+        emit Deceased(deathCertificateId);
     }
 
-    function checkIsNotDeath() private pure  {
-        require(bytes(deathCertificateUrl).length == 0);
+    // PRIVATE FUNCTIONS
+
+    function requireValidString(string memory str, string memory errorMessage) private pure {
+        require(bytes(str).length > 0, errorMessage);
     }
 
-    function checkIsDeath() private pure {
-        requireValidString(deathCertificateUrl);
+    function hash(string memory text) private pure returns (bytes32) {
+        return keccak256(abi.encodePacked(text));
     }
 
-    function checkIsNotExecuted() private pure {
-        require(!isExecuted);
+    function secureHash(string memory text) private pure returns (bytes32) {
+        return keccak256(abi.encodePacked(keccak256(abi.encodePacked(text))));
     }
 
-    function requireValidString(string memory str) private pure {
-        require(bytes(str).length > 0);
+    function checkIsNotDeath() private view {
+        require(bytes(deathCertificateId).length == 0, 'Testament owner is already death');
     }
 
-    constructor() {
+    function checkIsDeath(string memory errorMessage) private view {
+        requireValidString(deathCertificateId, errorMessage);
+    }
+
+    function checkIsNotExecuted() private view {
+        require(!isExecuted, 'Testament already executed');
     }
 }
