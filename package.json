@@ -1,17 +1,21 @@
 {
   "name": "@pascuals/testament",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "scripts": {
     "compile": "truffle compile"
   },
   "files": [
-    "/contracts/**/*.sol"
+    "/contracts/**/*.sol",
+    "/build/**/*.json"
   ],
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
   "devDependencies": {
-    "solidity-coverage": "^0.8.2",
-    "@openzeppelin/truffle-upgrades": "^1.17.0"
+    "@openzeppelin/truffle-upgrades": "^1.17.0",
+    "solidity-coverage": "^0.8.2"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.8.0"
   }
 }

@@ -1,13 +1,13 @@
 // Version de solidity del Smart Contract
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.16;
 
 // Smart Contract Information
 // Name: Testament
 
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 // Smart Contract - Testament
 contract Testament is Ownable, Pausable {
