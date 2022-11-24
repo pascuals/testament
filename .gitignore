@@ -1,4 +1,6 @@
 testament.iml
 .idea/
 
+/build/contracts/
+
 /node_modules/

@@ -77,9 +77,7 @@ contract Testament is Ownable, Pausable {
         emit UpdatedAsset(_assetId, _heir, _percent, oldPercent);
     }
 
-    function setIsDonor(bool _isDonor) public onlyOwner whenNotPaused {
-        checkIsNotDeath();
-        checkIsNotExecuted();
+    function setIsDonor(bool _isDonor) public onlyOwner whenNotPaused notDeathOrExecuted {
         require(_isDonor != isDonor, 'Donor value is already set');
 
         isDonor = _isDonor;
@@ -87,9 +85,7 @@ contract Testament is Ownable, Pausable {
         emit UpdatedIsDonor(isDonor);
     }
 
-    function setVideoUrl(string calldata _videoUrl, string calldata _videoPassword) public onlyOwner whenNotPaused {
-        checkIsNotDeath();
-        checkIsNotExecuted();
+    function setVideoUrl(string calldata _videoUrl, string calldata _videoPassword) public onlyOwner whenNotPaused notDeathOrExecuted {
         require(hash(videoUrl) != hash(_videoUrl) && hash(videoPassword) != hash(_videoPassword), 'Url already stored, try a different video url');
 
         string memory oldVideoUrl = videoUrl;
@@ -100,9 +96,7 @@ contract Testament is Ownable, Pausable {
         emit UpdatedVideo(videoUrl, oldVideoUrl);
     }
 
-    function setNotary(address _notary) public onlyOwner whenNotPaused {
-        checkIsNotDeath();
-        checkIsNotExecuted();
+    function setNotary(address _notary) public onlyOwner whenNotPaused notDeathOrExecuted {
         require(_notary != owner(), 'Owner of the testament cannot be the notary');
         require(_notary != notary, 'Notary already stored, try a different notary address');
 
@@ -125,8 +119,8 @@ contract Testament is Ownable, Pausable {
 
     function setDeathCertificate(string calldata _deathCertificateId) public whenNotPaused {
         require(msg.sender == notary, 'Not enough permissions to add a death certificate');
+        checkIsNotDeath('Owner is already death');
         checkIsNotExecuted();
-        checkIsDeath('Owner is already death');
         requireValidString(_deathCertificateId, 'Invalid death certificate');
 
         deathCertificateId = _deathCertificateId;
@@ -151,8 +145,8 @@ contract Testament is Ownable, Pausable {
         return keccak256(abi.encodePacked(keccak256(abi.encodePacked(text))));
     }
 
-    function checkIsNotDeath() private view {
-        require(bytes(deathCertificateId).length == 0, 'Testament owner is already death');
+    function checkIsNotDeath(string memory errorMessage) private view {
+        require(bytes(deathCertificateId).length == 0, errorMessage);
     }
 
     function checkIsDeath(string memory errorMessage) private view {
@@ -161,5 +155,11 @@ contract Testament is Ownable, Pausable {
 
     function checkIsNotExecuted() private view {
         require(!isExecuted, 'Testament already executed');
+    }
+
+    modifier notDeathOrExecuted() {
+        checkIsNotDeath('Testament owner is already death');
+        checkIsNotExecuted();
+        _;
     }
 }
