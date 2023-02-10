@@ -25,9 +25,10 @@ contract Testament is Ownable, Pausable {
     // Death certificate id
     string public deathCertificateId;
 
-    // Notary can update a death certificate and execute the testament
+    // Notary, able to update a death certificate and execute the testament
     address public notary;
 
+    // Check if the testament has been executed (testator deceased)
     bool public isExecuted;
 
     event Executed();
